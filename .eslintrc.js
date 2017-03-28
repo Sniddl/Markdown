@@ -5,7 +5,7 @@ module.exports = {
     sourceType: 'module'
   },
   env: {
-    browser: true,
+    browser: false,
     node: true
   },
   extends: 'standard',
@@ -18,6 +18,9 @@ module.exports = {
     // allow async-await
     'generator-star-spacing': 0,
     // allow debugger during development
-    'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0
+    'no-extend-native': ["error",{"exceptions": ["String"] }],
+    'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
+    'camelcase': [2, {"properties": "never"}]
+
   }
 }
