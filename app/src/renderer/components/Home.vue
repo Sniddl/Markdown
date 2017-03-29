@@ -22,13 +22,26 @@
 
 <script>
   var marked = require('marked')
+  function isInArray (value, array) {
+    return array.indexOf(value) > -1
+  }
   export default {
     data () {
       return {
         input: '# helsdflo',
         current_el: null,
         current_par: 'editor-1',
-        current_id: 0
+        current_id: 0,
+        carret_pos: 0,
+        prohibitedKeys: [
+          'Backspace',
+          'ArrowUp',
+          'ArrowLeft',
+          'ArrowRight',
+          'ArrowDown',
+          'Enter',
+          'Shift'
+        ]
       }
     },
     mounted () {
@@ -43,6 +56,54 @@
       }
     },
     methods: {
+      placeCaretAtEnd: function (el) {
+        el.focus()
+        if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
+          var range = document.createRange()
+          range.selectNodeContents(el)
+          range.collapse(false)
+          var sel = window.getSelection()
+          sel.removeAllRanges()
+          sel.addRange(range)
+        } else if (typeof document.body.createTextRange !== 'undefined') {
+          var textRange = document.body.createTextRange()
+          textRange.moveToElementText(el)
+          textRange.collapse(false)
+          textRange.select()
+        }
+      },
+      moveCaret: function (win, charCount) {
+        var sel, range
+        if (win.getSelection) {
+          sel = win.getSelection()
+          if (sel.rangeCount > 0) {
+            var textNode = sel.focusNode
+            var newOffset = sel.focusOffset + charCount
+            sel.collapse(textNode, Math.min(textNode.length, newOffset))
+          }
+        } else if ((sel = win.document.selection)) {
+          if (sel.type !== 'Control') {
+            range = sel.createRange()
+            range.move('character', charCount)
+            range.select()
+          }
+        }
+      },
+      replaceSelectedText: function (replacementText) {
+        var sel, range
+        if (window.getSelection) {
+          sel = window.getSelection()
+          if (sel.rangeCount) {
+            range = sel.getRangeAt(0)
+            window.rrange = range
+            range.deleteContents()
+            range.insertNode(document.createTextNode(replacementText))
+          }
+        } else if (document.selection && document.selection.createRange) {
+          range = document.selection.createRange()
+          range.text = replacementText
+        }
+      },
       execIf: function (e, key, func) {
         if (e.key === key) {
           this.removeIf(e, key)
@@ -79,40 +140,39 @@
         return el.id
       },
       update: function (e) {
-        e.preventDefault()
-        var par = document.getElementById(this.current_par)
-        par.innerHTML += e.key
-        this.removeIf(e, 'Shift')
-        this.execIf(e, 'Backspace', function (that) {
-          var el = document.getElementById(that.current_par)
-          console.log(el)
-          // el.innerHTML = h.substr(0, h.length - 1)
-        })
-        this.input = par.innerHTML
-        // par.innerHTML = marked(par.innerHTML, {sanitize: false})
-        // this.createIf({
-        //   e: e,
-        //   key: '#',
-        //   type: 'h1',
-        //   name: 'header1',
-        //   parent: this.current_par,
-        //   make_parent: true
-        // })
-
-        // var node = document.getElementById('header1-0')
-        // node.focus()
-        // if (this.input == null) {
-        //   this.input = e.key
-        // } else {
-        //   if (e.key === 'Backspace') {
-        //     this.input = this.input.substr(0, this.input.length - 1)
-        //   } else if (e.key === 'Shift') {
-        //     this.input = this.input
-        //   } else {
-        //     this.input = this.input + e.key
-        //   }
-        // }
-        // this.input = 'e.target.value'
+        if (!isInArray(e.key, this.prohibitedKeys)) {
+          console.log(e.key)
+          e.preventDefault()
+          this.input += e.key
+          // var par = document.getElementById(this.current_par)
+          //
+          // try {
+          //   par.innerHTML += e.key
+          // } catch (e) {
+          //   this.current_par = 'editor-1'
+          //   par.innerHTML += e.key
+          // }
+          //
+          // this.removeIf(e, 'Shift')
+          //
+          // this.execIf(e, ' ', function (that) {
+          //   var el = document.getElementById(that.current_par)
+          //   el.innerHTML += '&nbsp;'
+          // })
+          //
+          // this.carret_pos += 1
+          //
+          this.placeCaretAtEnd(document.getElementById('editor-1'))
+          //
+          // this.createIf({
+          //   e: e,
+          //   key: '#',
+          //   type: 'h1',
+          //   name: 'header1',
+          //   parent: this.current_par,
+          //   make_parent: true
+          // })
+        }
       }
     },
     name: 'Home'
