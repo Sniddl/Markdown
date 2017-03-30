@@ -1,200 +1,160 @@
 <template>
-  <div>
+  <div id="template">
+    <button type="button" v-on:click="save(input)">Save</button>
+    <button type="button" v-on:click="open()">Open</button>
+    <!--
+    <div id="editor">
+      <textarea :value="input" @input="update" id="markdown"></textarea>
+      <div v-html="compiledMarkdown" id="compiled"></div>
+    </div> -->
 
-
-    <div id="editor-0" >
-      <!-- <textarea :value="input" @input="update" ref="inputText"></textarea> -->
-      <div v-html="compiledMarkdown"  contenteditable="true" v-on:keydown='update' id="editor-1"></div>
-      <iframe ref="frame" width="100" height="100"></iframe>
+    <div id="a" class="split split-horizontal">
+      <textarea :value="input" @input="update" id="markdown"></textarea>
     </div>
-    <div id="stats">
-      input       = {{ input }}
-      current_el  = {{ current_el }}
-      current_par = {{ current_par }}
-      current_id  = {{ current_id }}
+    <div id="b" class="split split-horizontal">
+      <div v-html="compiledMarkdown" id="compiled"></div>
     </div>
-
-
-
-
   </div>
 </template>
 
 <script>
-  var marked = require('marked')
-  function isInArray (value, array) {
-    return array.indexOf(value) > -1
-  }
+  var hljs = require('highlight.js')
+  const $ = require('jquery')
+  const markdown = require('markdown-it')({
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(lang, str).value
+        } catch (__) {}
+      }
+      return ''
+    }
+  })
+  const app = require('electron').remote
+  const dialog = app.dialog
+  const fs = require('fs')
+  const shell = require('electron').shell
+  const Split = window.split
+  // const hl = require('highlight')
+
   export default {
     data () {
       return {
-        input: '# helsdflo',
-        current_el: null,
-        current_par: 'editor-1',
-        current_id: 0,
-        carret_pos: 0,
-        prohibitedKeys: [
-          'Backspace',
-          'ArrowUp',
-          'ArrowLeft',
-          'ArrowRight',
-          'ArrowDown',
-          'Enter',
-          'Shift'
-        ]
+        input: ''
       }
     },
     mounted () {
-      // var editor = document.getElementById('editor-1')
-      // if (editor.innerHTML === '') {
+      window.addEventListener('keydown', this.focus)
+      $(document).on('click', 'a[href^="http"]', function (event) {
+        event.preventDefault()
+        shell.openExternal(this.href)
+      })
+      // $(document).on('ready', function () {
+      Split(['#a', '#b'], {
+        gutterSize: 10,
+        cursor: 'col-resize'
+      })
+
+      // Split(['#c', '#d'], {
+      //   direction: 'vertical',
+      //   sizes: [25, 75],
+      //   gutterSize: 10,
+      //   cursor: 'row-resize'
+      // })
       //
-      // }
+      // Split(['#e', '#f'], {
+      //   direction: 'vertical',
+      //   sizes: [25, 75],
+      //   gutterSize: 10,
+      //   cursor: 'row-resize'
+      // })
+      // })
     },
     computed: {
       compiledMarkdown: function () {
-        return marked(this.input, { sanitize: false })
+        return markdown.render(this.input)
       }
     },
     methods: {
-      placeCaretAtEnd: function (el) {
-        el.focus()
-        if (typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined') {
-          var range = document.createRange()
-          range.selectNodeContents(el)
-          range.collapse(false)
-          var sel = window.getSelection()
-          sel.removeAllRanges()
-          sel.addRange(range)
-        } else if (typeof document.body.createTextRange !== 'undefined') {
-          var textRange = document.body.createTextRange()
-          textRange.moveToElementText(el)
-          textRange.collapse(false)
-          textRange.select()
-        }
-      },
-      moveCaret: function (win, charCount) {
-        var sel, range
-        if (win.getSelection) {
-          sel = win.getSelection()
-          if (sel.rangeCount > 0) {
-            var textNode = sel.focusNode
-            var newOffset = sel.focusOffset + charCount
-            sel.collapse(textNode, Math.min(textNode.length, newOffset))
-          }
-        } else if ((sel = win.document.selection)) {
-          if (sel.type !== 'Control') {
-            range = sel.createRange()
-            range.move('character', charCount)
-            range.select()
-          }
-        }
-      },
-      replaceSelectedText: function (replacementText) {
-        var sel, range
-        if (window.getSelection) {
-          sel = window.getSelection()
-          if (sel.rangeCount) {
-            range = sel.getRangeAt(0)
-            window.rrange = range
-            range.deleteContents()
-            range.insertNode(document.createTextNode(replacementText))
-          }
-        } else if (document.selection && document.selection.createRange) {
-          range = document.selection.createRange()
-          range.text = replacementText
-        }
-      },
-      execIf: function (e, key, func) {
-        if (e.key === key) {
-          this.removeIf(e, key)
-          func(this)
-        }
-      },
-      removeIf: function (e, key) {
-        if (e.key === key) {
-          var el = document.getElementById(this.current_par)
-          var h = el.innerHTML
-          el.innerHTML = h.substr(0, h.length - key.length)
-        }
-      },
-      createIf: function (obj) {
-        if (obj.e.key === obj.key) {
-          this.removeIf(obj.e, obj.key)
-          var elid = this.createEl(obj.type, obj.name, obj.parent)
-          if (obj.make_parent === true) {
-            this.current_par = elid
-          }
-        }
-      },
-      createEl: function (type, name, parent) {
-        var el = document.createElement(type)
-        el.id = name + '-' + this.current_id
-        el.className = name
-        this.current_id += 1
-        this.current_el = el.id
-        el.contentEditable
-        // if parent != current par then change current par
-        var par = document.getElementById(parent)
-        // console.log(par)
-        par.appendChild(el)
-        return el.id
-      },
       update: function (e) {
-        if (!isInArray(e.key, this.prohibitedKeys)) {
-          console.log(e.key)
-          e.preventDefault()
-          this.input += e.key
-          // var par = document.getElementById(this.current_par)
-          //
-          // try {
-          //   par.innerHTML += e.key
-          // } catch (e) {
-          //   this.current_par = 'editor-1'
-          //   par.innerHTML += e.key
-          // }
-          //
-          // this.removeIf(e, 'Shift')
-          //
-          // this.execIf(e, ' ', function (that) {
-          //   var el = document.getElementById(that.current_par)
-          //   el.innerHTML += '&nbsp;'
-          // })
-          //
-          // this.carret_pos += 1
-          //
-          this.placeCaretAtEnd(document.getElementById('editor-1'))
-          //
-          // this.createIf({
-          //   e: e,
-          //   key: '#',
-          //   type: 'h1',
-          //   name: 'header1',
-          //   parent: this.current_par,
-          //   make_parent: true
-          // })
-        }
+        this.input = e.target.value
+        // $('compiled').html(hl('for(var i=0;i<10;i++)alert(i);'))
+        // $('a').on('click', function (e) {
+        //   e.preventDefault()
+        //   e.stopPropagation()
+          // setTimeout(function () {
+          //   var path = e.target.href
+          //   ipcRenderer.sendToHost('element-clicked', path)
+          // }, 100)
+        //   return false
+        // }, true)
+        // var a = document.getElementsByTagName('a')
+        // for (var i = 0; i < a.length; i++) {
+        //   a[i].target = '_blank'
+        //   a[i].onclick = function (e) {
+        //     e.preventDefault()
+        //   }
+        // }
+      },
+      focus: function () {
+        $('#markdown').focus()
+      },
+      save: function (content) {
+        dialog.showSaveDialog({ filters: [
+          { name: 'Markdown', extensions: ['md'] }
+        ]}, function (fileName) {
+          if (fileName === undefined) return
+          fs.writeFile(fileName, content, function (err) {
+            if (err) {
+              console.log('Error when creating file' + err.message)
+            }
+            console.log('file successfully saved.')
+          })
+        })
+      },
+      open: function () {
+        dialog.showOpenDialog(function (fileNames) {
+          if (fileNames === undefined) return
+          var fileName = fileNames[0]
+          fs.readFile(fileName, 'utf-8', function (er, data) {
+            $('#markdown').val(data)
+            var ev = document.createEvent('Event')
+            ev.initEvent('input', true, true)
+            $('#markdown')[0].dispatchEvent(ev)
+          })
+        })
       }
     },
+
     name: 'Home'
   }
 </script>
 
 <style scoped>
-  html, body, #editor {
-  margin: 0;
-  height: 100%;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  color: #333;
-  }
+
+
+  @import "/css/code.css";
+  textarea#markdown {
+    resize: none;
+    border: none;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    padding: 20px;
+}
+/*
+
+
 
   textarea, #editor div {
   display: inline-block;
-  width: 50vw;
+  width: 40vw;
   height: 100vh;
   vertical-align: top;
   box-sizing: border-box;
   padding: 5px 20px;
   background: white;
+  margin: 0;
   }
 
   textarea {
@@ -210,12 +170,21 @@
 
   code {
   color: #f66;
-  }
+  }*/
 
 </style>
 
 <style>
-  .header1 {
-    display: inline;
+  html, body, #editor {
+  margin: 0;
+  height: 100%;
+  padding: 0 !important;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
+  }
+  div#template {
+    width: 100vw;
+    height: 100vh;
   }
 </style>
+<link rel="stylesheet" href="/css/code.css">

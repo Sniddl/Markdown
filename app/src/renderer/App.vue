@@ -30,7 +30,6 @@
         rgba(229, 229, 229, .85) 100%
       );
     background-position: center;
-    display: flex;
     font-family: sans-serif;
   }
 </style>

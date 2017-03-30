@@ -2,24 +2,57 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <link href="https://cdn.quilljs.com/1.2.2/quill.snow.css" rel="stylesheet">
     <title>markdown</title>
-    <style media="screen">
-    #cursor {
-      border-right: 2px solid #333;
-      display: inline-block;
-      padding-right: 2px;
-    }
-    </style>
+    <!-- <link rel="stylesheet" href="/css/code.css"> -->
+    <link rel="stylesheet" href="/css/mark-github.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
+
+
+
     <% if (htmlWebpackPlugin.options.appModules) { %>
       <!-- Add `app/node_modules` to global paths so `require` works properly in development -->
       <script>
         require('module').globalPaths.push('<%= htmlWebpackPlugin.options.appModules.replace(/\\/g, '\\\\') %>')
       </script>
     <% } %>
+
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.2.0/split.min.js"></script>
+    <script type="text/javascript">
+    window.split = Split
+    // Split(['#a', '#b'], {
+    //   gutterSize: 1,
+    //   cursor: 'col-resize'
+    // })
+    //
+    // Split(['#c', '#d'], {
+    //   direction: 'vertical',
+    //   sizes: [25, 75],
+    //   gutterSize: 1,
+    //   cursor: 'row-resize'
+    // })
+    //
+    // Split(['#e', '#f'], {
+    //   direction: 'vertical',
+    //   sizes: [25, 75],
+    //   gutterSize: 1,
+    //   cursor: 'row-resize'
+    // })
+    </script>
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- <div id="a" class="split split-horizontal">
+      <div id="c" class="split content"></div>
+      <div id="d" class="split content">d</div>
+    </div>
+    <div id="b" class="split split-horizontal">
+      <div id="e" class="split content">e</div>
+      <div id="f" class="split content">f</div>
+    </div> -->
     <!-- webpack builds are automatically injected -->
   </body>
+
+
 </html>

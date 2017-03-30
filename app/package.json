@@ -1,5 +1,5 @@
 {
-  "name": "markdown",
+  "name": "sniddl-mark",
   "version": "0.0.0",
   "description": "Use markdown to quickly take notes.",
   "main": "./dist/main.js",
