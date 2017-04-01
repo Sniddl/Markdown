@@ -1,5 +1,5 @@
 const {Menu} = require('electron')
-const {ipcMain} = require('electron')
+// const {ipcMain} = require('electron') //use to listen to events from ipc.
 const electron = require('electron')
 const app = electron.app
 

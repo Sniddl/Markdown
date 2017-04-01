@@ -1,6 +1,6 @@
 {
   "name": "sniddl-mark",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Use markdown to quickly take notes.",
   "main": "./dist/main.js",
   "dependencies": {
