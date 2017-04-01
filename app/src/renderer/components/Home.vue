@@ -1,18 +1,10 @@
 <template>
   <div id="template">
-    <button type="button" v-on:click="save(input)">Save</button>
-    <button type="button" v-on:click="open()">Open</button>
-    <!--
-    <div id="editor">
-      <textarea :value="input" @input="update" id="markdown"></textarea>
-      <div v-html="compiledMarkdown" id="compiled"></div>
-    </div> -->
-
     <div id="a" class="split split-horizontal">
-      <textarea :value="input" @input="update" id="markdown"></textarea>
+      <div  id="markdown"></div>
     </div>
     <div id="b" class="split split-horizontal">
-      <div v-html="compiledMarkdown" id="compiled"></div>
+      <div v-html="compiledMarkdown" id="wrapper"></div>
     </div>
   </div>
 </template>
@@ -33,42 +25,35 @@
   const app = require('electron').remote
   const dialog = app.dialog
   const fs = require('fs')
-  const shell = require('electron').shell
   const Split = window.split
+  const CodeMirror = window.CodeMirror
+  var editor
+  var sniddl
+  var that
   // const hl = require('highlight')
 
   export default {
     data () {
       return {
-        input: ''
+        input: '',
+        current_file: ''
       }
     },
     mounted () {
+      that = this
+      sniddl = require('../events')(app, that)
+      console.log(sniddl)
       window.addEventListener('keydown', this.focus)
-      $(document).on('click', 'a[href^="http"]', function (event) {
-        event.preventDefault()
-        shell.openExternal(this.href)
-      })
       // $(document).on('ready', function () {
       Split(['#a', '#b'], {
         gutterSize: 10,
         cursor: 'col-resize'
       })
 
-      // Split(['#c', '#d'], {
-      //   direction: 'vertical',
-      //   sizes: [25, 75],
-      //   gutterSize: 10,
-      //   cursor: 'row-resize'
-      // })
-      //
-      // Split(['#e', '#f'], {
-      //   direction: 'vertical',
-      //   sizes: [25, 75],
-      //   gutterSize: 10,
-      //   cursor: 'row-resize'
-      // })
-      // })
+      editor = CodeMirror($('#markdown')[0], {
+        mode: 'markdown'
+      })
+      editor.on('change', this.update)
     },
     computed: {
       compiledMarkdown: function () {
@@ -77,38 +62,20 @@
     },
     methods: {
       update: function (e) {
-        this.input = e.target.value
-        // $('compiled').html(hl('for(var i=0;i<10;i++)alert(i);'))
-        // $('a').on('click', function (e) {
-        //   e.preventDefault()
-        //   e.stopPropagation()
-          // setTimeout(function () {
-          //   var path = e.target.href
-          //   ipcRenderer.sendToHost('element-clicked', path)
-          // }, 100)
-        //   return false
-        // }, true)
-        // var a = document.getElementsByTagName('a')
-        // for (var i = 0; i < a.length; i++) {
-        //   a[i].target = '_blank'
-        //   a[i].onclick = function (e) {
-        //     e.preventDefault()
-        //   }
-        // }
+        console.log(this.current_file)
+        this.input = editor.getValue()
       },
       focus: function () {
-        $('#markdown').focus()
+        editor.focus()
       },
-      save: function (content) {
+      save_as: function () {
         dialog.showSaveDialog({ filters: [
           { name: 'Markdown', extensions: ['md'] }
         ]}, function (fileName) {
           if (fileName === undefined) return
-          fs.writeFile(fileName, content, function (err) {
-            if (err) {
-              console.log('Error when creating file' + err.message)
-            }
-            console.log('file successfully saved.')
+          that.current_file = fileName
+          fs.writeFile(fileName, editor.getValue(), function (err) {
+            if (err) throw err
           })
         })
       },
@@ -116,16 +83,22 @@
         dialog.showOpenDialog(function (fileNames) {
           if (fileNames === undefined) return
           var fileName = fileNames[0]
+          that.current_file = fileName
           fs.readFile(fileName, 'utf-8', function (er, data) {
-            $('#markdown').val(data)
-            var ev = document.createEvent('Event')
-            ev.initEvent('input', true, true)
-            $('#markdown')[0].dispatchEvent(ev)
+            editor.setValue(data)
           })
         })
+      },
+      save: function () {
+        if (that.current_file === '') {
+          that.save_as()
+        } else {
+          fs.writeFile(that.current_file, editor.getValue(), function (err) {
+            if (err) throw err
+          })
+        }
       }
     },
-
     name: 'Home'
   }
 </script>
@@ -142,35 +115,7 @@
     outline: none;
     padding: 20px;
 }
-/*
 
-
-
-  textarea, #editor div {
-  display: inline-block;
-  width: 40vw;
-  height: 100vh;
-  vertical-align: top;
-  box-sizing: border-box;
-  padding: 5px 20px;
-  background: white;
-  margin: 0;
-  }
-
-  textarea {
-  border: none;
-  border-right: 1px solid #ccc;
-  resize: none;
-  outline: none;
-  background-color: white;
-  font-size: 14px;
-  font-family: 'Monaco', courier, monospace;
-  padding: 20px;
-  }
-
-  code {
-  color: #f66;
-  }*/
 
 </style>
 

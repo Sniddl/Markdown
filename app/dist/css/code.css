@@ -46,7 +46,9 @@ body {
   height: 100%;
   float: left;
 }
-
+.CodeMirror {
+  height: 100vh;
+}
 /*.gutter.gutter-vertical:after {
     content: '';
     display: block;

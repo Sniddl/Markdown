@@ -15,7 +15,6 @@ const router = new Router({
   scrollBehavior: () => ({ y: 0 }),
   routes
 })
-
 /* eslint-disable no-new */
 new Vue({
   router,

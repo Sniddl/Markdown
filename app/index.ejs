@@ -6,8 +6,8 @@
     <!-- <link rel="stylesheet" href="/css/code.css"> -->
     <link rel="stylesheet" href="/css/mark-github.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
-
-
+    <link rel="stylesheet" href="/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/css/mark-github.css">
 
     <% if (htmlWebpackPlugin.options.appModules) { %>
       <!-- Add `app/node_modules` to global paths so `require` works properly in development -->
@@ -20,38 +20,18 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.2.0/split.min.js"></script>
     <script type="text/javascript">
     window.split = Split
-    // Split(['#a', '#b'], {
-    //   gutterSize: 1,
-    //   cursor: 'col-resize'
-    // })
-    //
-    // Split(['#c', '#d'], {
-    //   direction: 'vertical',
-    //   sizes: [25, 75],
-    //   gutterSize: 1,
-    //   cursor: 'row-resize'
-    // })
-    //
-    // Split(['#e', '#f'], {
-    //   direction: 'vertical',
-    //   sizes: [25, 75],
-    //   gutterSize: 1,
-    //   cursor: 'row-resize'
-    // })
     </script>
   </head>
   <body>
     <div id="app"></div>
-
-    <!-- <div id="a" class="split split-horizontal">
-      <div id="c" class="split content"></div>
-      <div id="d" class="split content">d</div>
-    </div>
-    <div id="b" class="split split-horizontal">
-      <div id="e" class="split content">e</div>
-      <div id="f" class="split content">f</div>
-    </div> -->
-    <!-- webpack builds are automatically injected -->
+    <script src="/codemirror/lib/codemirror.js" charset="utf-8"></script>
+    <script src="/codemirror/mode/markdown/markdown.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      // var code = document.getElementById('markdown')
+      // var editor = CodeMirror(code, {
+      //   mode: 'markdown'
+      // })
+    </script>
   </body>
 
 
